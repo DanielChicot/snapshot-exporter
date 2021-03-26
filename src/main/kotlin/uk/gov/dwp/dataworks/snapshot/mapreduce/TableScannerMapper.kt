@@ -35,6 +35,10 @@ class TableScannerMapper: TableMapper<Text, Text>() {
         log.info("encryptedEncryptionKey: '$encryptedEncryptionKey'.")
         log.info("keyEncryptionKeyId: '$keyEncryptionKeyId'.")
         log.info("initializationVector: '$initializationVector'.")
+
+        val dbObject = Text().apply { set(encryptedDbObject) }
+        val id = Text().apply { set(idBytes) }
+        context.write(id, dbObject)
     }
 
     companion object {
