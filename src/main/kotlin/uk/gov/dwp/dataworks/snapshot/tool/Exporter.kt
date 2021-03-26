@@ -1,11 +1,13 @@
 package uk.gov.dwp.dataworks.snapshot.tool
 
 import org.apache.hadoop.conf.Configured
+import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil
 import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapreduce.Job
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat
 import org.apache.hadoop.util.Tool
 import org.slf4j.LoggerFactory
@@ -20,14 +22,14 @@ class Exporter: Configured(), Tool {
 
     override fun run(args: Array<out String>): Int {
         val configuration = HBaseConfiguration.create()
-        println("ARGS: '${args.asList()}'.")
-        val sourceTable = "core:statement"
+        val sourceTable = args[0]
 
         val job = Job.getInstance(configuration,"Snapshot exporter '$sourceTable': " +
                     "'${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())}'").apply {
             setJarByClass(TableScannerMapper::class.java)
             outputFormatClass = NullOutputFormat::class.java
             reducerClass = S3Reducer::class.java
+            numReduceTasks = 1
         }
 
         val scan = Scan().apply {

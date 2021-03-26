@@ -37,7 +37,7 @@ class TableScannerMapper: TableMapper<Text, Text>() {
         log.info("initializationVector: '$initializationVector'.")
 
         val dbObject = Text().apply { set(encryptedDbObject) }
-        val id = Text().apply { set(idBytes) }
+        val id = Text().apply { set("output_file_1") }
         context.write(id, dbObject)
     }
 
