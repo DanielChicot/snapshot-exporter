@@ -16,16 +16,26 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter")
+
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+	implementation("org.apache.hbase:hbase-client:1.4.13")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+	implementation("org.springframework.boot:spring-boot-starter") {
+		exclude("ch.qos.logback", "logback-classic")
+	}
+
+	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+		exclude("ch.qos.logback", "logback-classic")
+	}
 }
 
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "11"
+		jvmTarget = "1.8"
 	}
 }
 
