@@ -20,6 +20,7 @@ dependencies {
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
 	implementation("org.apache.hbase:hbase-client:1.4.13")
+	implementation("org.apache.hbase:hbase-server:1.4.13")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 

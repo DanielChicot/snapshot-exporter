@@ -1,4 +1,4 @@
-package uk.gow.dwp.dataworks.snapshot.properties
+package uk.gov.dwp.dataworks.snapshot.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean

@@ -1,4 +1,4 @@
-package uk.gow.dwp.dataworks.snapshot
+package uk.gov.dwp.dataworks.snapshot
 
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.util.Tool
