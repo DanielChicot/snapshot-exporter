@@ -13,29 +13,33 @@ import java.io.ByteArrayOutputStream
 class S3Reducer: Reducer<Text, Text, Text, Text>() {
 
     override fun reduce(key: Text, values: MutableIterable<Text>, context: Context) {
-        val target = ByteArrayOutputStream()
+        s3client.putObject(request(key), requestBody(sourceBytes(values)))
+    }
 
-        BufferedOutputStream(target).use { output ->
-            values.map(Text::getBytes)
-                .forEach { value ->
-                    output.write(value)
-                    output.write(10)
+    private fun requestBody(input: ByteArray): RequestBody =
+            RequestBody.fromInputStream(ByteArrayInputStream(input), input.size.toLong())
+
+    private fun sourceBytes(values: MutableIterable<Text>): ByteArray =
+            ByteArrayOutputStream().run {
+                BufferedOutputStream(this).use { output ->
+                    values.map(Text::getBytes)
+                        .forEach { value ->
+                            output.write(value)
+                            output.write(10)
+                        }
                 }
-        }
+                toByteArray()
+            }
 
-        log.info("Key: ${key.bytes}")
-        val valid = key.bytes.sliceArray(0 until key.length)
-        val request = with(PutObjectRequest.builder()) {
-            val prefix = "map_reduce_output/${String(valid)}.jsonl"
+    private fun request(key: Text): PutObjectRequest =
+        with(PutObjectRequest.builder()) {
+            val prefix = "map_reduce_output/${key(key)}.jsonl"
             bucket("danc-nifi-stub")
             key(prefix)
             build()
         }
 
-        val output = target.toByteArray()
-        val body = RequestBody.fromInputStream(ByteArrayInputStream(output), output.size.toLong())
-        s3client.putObject(request, body)
-    }
+    private fun key(key: Text) = String(key.bytes.sliceArray(0 until key.length))
 
     companion object {
         private val log = LoggerFactory.getLogger(S3Reducer::class.java)
