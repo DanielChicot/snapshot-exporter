@@ -14,8 +14,8 @@ import java.nio.charset.Charset
 
 class TableScannerMapper: TableMapper<Text, Text>() {
 
-    override fun map(row: ImmutableBytesWritable, result: org.apache.hadoop.hbase.client.Result, context: Context) {
-        val idBytes = result.row
+    override fun map(id: ImmutableBytesWritable, result: org.apache.hadoop.hbase.client.Result, context: Context) {
+        val row = result.row
         val value = result.value()
         val json = value.toString(Charset.defaultCharset())
         val dataBlock = Gson().fromJson(json, JsonObject::class.java)
@@ -28,17 +28,18 @@ class TableScannerMapper: TableMapper<Text, Text>() {
         val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
         val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
 
-        log.info("id: '${String(idBytes)}'.")
         log.info("outerType: '$outerType'.")
         log.info("innerType: '$innerType'.")
         log.info("encryptedDbObject: '$encryptedDbObject'.")
         log.info("encryptedEncryptionKey: '$encryptedEncryptionKey'.")
         log.info("keyEncryptionKeyId: '$keyEncryptionKeyId'.")
         log.info("initializationVector: '$initializationVector'.")
-
+        val f: Int = if (row[0] < 0) (row[0] + 256) else row[0].toInt()
+        val key = String.format("db.${context.configuration["source.table"].replace(":", "_")}_%03d", f)
+        log.info("f: '$f'.")
+        log.info("key: '$key'.")
         val dbObject = Text().apply { set(encryptedDbObject) }
-        val id = Text().apply { set("output_file_1") }
-        context.write(id, dbObject)
+        context.write(Text().apply { set(key) }, dbObject)
     }
 
     companion object {

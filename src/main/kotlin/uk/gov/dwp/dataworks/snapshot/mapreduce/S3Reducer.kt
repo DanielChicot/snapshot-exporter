@@ -1,6 +1,5 @@
 package uk.gov.dwp.dataworks.snapshot.mapreduce
 
-import org.apache.hadoop.io.IntWritable
 import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapreduce.Reducer
 import org.slf4j.LoggerFactory
@@ -24,10 +23,12 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
                 }
         }
 
+        log.info("Key: ${key.bytes}")
+        val valid = key.bytes.sliceArray(0 until key.length)
         val request = with(PutObjectRequest.builder()) {
-            val key = "map_reduce_output/${String(key.bytes)}"
+            val prefix = "map_reduce_output/${String(valid)}.jsonl"
             bucket("danc-nifi-stub")
-            key(key)
+            key(prefix)
             build()
         }
 
