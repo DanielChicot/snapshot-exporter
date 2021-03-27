@@ -22,23 +22,19 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
     private fun sourceBytes(values: MutableIterable<Text>): ByteArray =
             ByteArrayOutputStream().run {
                 BufferedOutputStream(this).use { output ->
-                    values.map(Text::getBytes)
-                        .forEach { value ->
-                            output.write(value)
-                            output.write(10)
-                        }
+                    values.map(Text::getBytes).forEach<ByteArray>(output::write)
                 }
                 toByteArray()
             }
 
     private fun request(key: Text): PutObjectRequest =
-        with(PutObjectRequest.builder()) {
-            val prefix = "map_reduce_output/${key(key)}.jsonl"
-            bucket("danc-nifi-stub")
-            key(prefix)
-            build()
-        }
+            with(PutObjectRequest.builder()) {
+                bucket("danc-nifi-stub")
+                key(prefix(key))
+                build()
+            }
 
+    private fun prefix(key: Text): String = "map_reduce_output/${key(key)}.jsonl"
     private fun key(key: Text) = String(key.bytes.sliceArray(0 until key.length))
 
     companion object {

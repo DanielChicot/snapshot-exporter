@@ -38,7 +38,7 @@ class TableScannerMapper: TableMapper<Text, Text>() {
         val key = String.format("db.${context.configuration["source.table"].replace(":", "_")}_%03d", f)
         log.info("f: '$f'.")
         log.info("key: '$key'.")
-        val dbObject = Text().apply { set(encryptedDbObject) }
+        val dbObject = Text().apply { set(StringBuilder(encryptedDbObject).append('\n').toString()) }
         context.write(Text().apply { set(key) }, dbObject)
     }
 
