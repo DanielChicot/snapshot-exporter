@@ -23,6 +23,8 @@ dependencies {
 	implementation("com.beust:klaxon:5.4")
 	implementation("com.github.dwp:dataworks-common-logging:0.0.6")
 	implementation("com.google.code.gson:gson:2.8.6")
+	implementation("io.micrometer:micrometer-core:1.6.3")
+	implementation("io.micrometer:micrometer-registry-prometheus:1.6.3")
 	implementation("io.prometheus:simpleclient:0.9.0")
 	implementation("io.prometheus:simpleclient_caffeine:0.9.0")
 	implementation("io.prometheus:simpleclient_logback:0.9.0")
@@ -39,8 +41,6 @@ dependencies {
 	implementation("org.springframework.retry:spring-retry:1.3.1")
 	implementation("org.springframework:spring-context:5.3.5")
 	implementation("software.amazon.awssdk:s3:2.16.28")
-
-
 }
 
 tasks.withType<KotlinCompile> {
