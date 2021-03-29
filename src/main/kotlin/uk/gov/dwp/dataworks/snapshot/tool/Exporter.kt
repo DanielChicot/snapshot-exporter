@@ -19,7 +19,7 @@ import java.util.*
 class Exporter: Configured(), Tool {
 
     override fun run(args: Array<out String>): Int =
-            initialisedTableMapperJob(args[0]).run {
+            initialisedTableMapperJob(args[0], args[1]).run {
                 if (waitForCompletion(true)) {
                     0
                 } else {
@@ -28,8 +28,8 @@ class Exporter: Configured(), Tool {
                 }
             }
 
-    private fun initialisedTableMapperJob(sourceTable: String): Job =
-            job(sourceTable).also { job ->
+    private fun initialisedTableMapperJob(sourceTable: String, targetBucket: String): Job =
+            job(sourceTable, targetBucket).also { job ->
                 TableMapReduceUtil.initTableMapperJob(sourceTable,
                     scan(),
                     TableScannerMapper::class.java,
@@ -44,16 +44,19 @@ class Exporter: Configured(), Tool {
                 cacheBlocks = false
             }
 
-    private fun job(sourceTable: String): Job =
-            Job.getInstance(configuration(sourceTable), jobName(sourceTable)).apply {
+    private fun job(sourceTable: String, targetBucket: String): Job =
+            Job.getInstance(configuration(sourceTable, targetBucket), jobName(sourceTable)).apply {
                 setJarByClass(TableScannerMapper::class.java)
                 outputFormatClass = NullOutputFormat::class.java
                 reducerClass = S3Reducer::class.java
                 numReduceTasks = 1
             }
 
-    private fun configuration(sourceTable: String): Configuration =
-            HBaseConfiguration.create().apply { this["source.table"] = sourceTable }
+    private fun configuration(sourceTable: String, targetBucket: String): Configuration =
+            HBaseConfiguration.create().apply {
+                this["source.table"] = sourceTable
+                this["s3.bucket"] = targetBucket
+            }
 
     private fun jobName(sourceTable: String) = "Snapshot exporter '$sourceTable': " +
             "'${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())}'"

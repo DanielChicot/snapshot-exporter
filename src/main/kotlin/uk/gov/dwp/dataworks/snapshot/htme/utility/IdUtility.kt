@@ -18,7 +18,7 @@ object IdUtility {
     }
 
     private fun wasScalarId(id: JsonObject): Boolean {
-        return id.keySet().size == 1 && id.has("id")
+        return id.entrySet().size == 1 && id.has("id")
     }
 
     private val gson = Gson()

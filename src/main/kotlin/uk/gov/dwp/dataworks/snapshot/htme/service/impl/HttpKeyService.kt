@@ -1,6 +1,6 @@
 package uk.gov.dwp.dataworks.snapshot.htme.service.impl
 
-import app.utils.UUIDGenerator
+import uk.gov.dwp.dataworks.snapshot.htme.utility.UUIDGenerator
 import com.google.gson.Gson
 import io.prometheus.client.Counter
 import io.prometheus.client.spring.web.PrometheusTimeMethod

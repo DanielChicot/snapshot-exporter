@@ -22,7 +22,7 @@ repositories {
 dependencies {
 	implementation("com.beust:klaxon:5.4")
 	implementation("com.github.dwp:dataworks-common-logging:0.0.6")
-	implementation("com.google.code.gson:gson:2.8.6")
+	implementation("com.google.code.gson:gson:2.2.4")
 	implementation("io.micrometer:micrometer-core:1.6.3")
 	implementation("io.micrometer:micrometer-registry-prometheus:1.6.3")
 	implementation("io.prometheus:simpleclient:0.9.0")

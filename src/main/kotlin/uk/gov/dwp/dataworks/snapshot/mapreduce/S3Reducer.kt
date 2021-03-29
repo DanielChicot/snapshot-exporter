@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream
 class S3Reducer: Reducer<Text, Text, Text, Text>() {
 
     override fun reduce(key: Text, values: MutableIterable<Text>, context: Context) {
-        s3client.putObject(request(key), requestBody(sourceBytes(values)))
+        s3client.putObject(request(context.configuration["s3.bucket"], key), requestBody(sourceBytes(values)))
     }
 
     private fun requestBody(input: ByteArray): RequestBody =
@@ -27,9 +27,9 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
             toByteArray()
         }
 
-    private fun request(key: Text): PutObjectRequest =
+    private fun request(bucket: String, key: Text): PutObjectRequest =
         with(PutObjectRequest.builder()) {
-            bucket("danc-nifi-stub")
+            bucket(bucket)
             key(prefix(key))
             build()
         }

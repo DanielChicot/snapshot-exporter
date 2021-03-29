@@ -1,9 +1,7 @@
 package uk.gov.dwp.dataworks.snapshot.htme.context
 
 import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.*
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import uk.gov.dwp.dataworks.snapshot.htme.configuration.CipherInstanceProvider
 import uk.gov.dwp.dataworks.snapshot.htme.configuration.CompressionInstanceProvider
@@ -16,8 +14,9 @@ import javax.crypto.Cipher
     "uk.gov.dwp.dataworks.snapshot.htme.configuration",
     "uk.gov.dwp.dataworks.snapshot.htme.process",
     "uk.gov.dwp.dataworks.snapshot.htme.service",
-    "uk.gov.dwp.dataworks.snapshot.htme.utility",
-)
+    "uk.gov.dwp.dataworks.snapshot.htme.utility")
+@PropertySources(PropertySource("classpath:application.properties"),
+    PropertySource("file:/opt/emr/dks.properties"))
 class HtmeConfiguration {
 
     @Bean

@@ -9,12 +9,12 @@ import java.util.*
 class DateWrapper {
 
     fun processJsonObject(jsonObject: JsonObject, includeLastModified: Boolean = true) {
-        jsonObject.keySet()
+        jsonObject.entrySet().map(MutableMap.MutableEntry<String, JsonElement>::key)
                 .filter {
                     it != "_lastModifiedDateTime" || includeLastModified
                 }
                 .forEach { key ->
-                    key?.let {
+                    key.let {
                         processJsonElement(jsonObject, it, jsonObject[it])
                     }
                 }
@@ -45,12 +45,13 @@ class DateWrapper {
         }
     }
 
-    private fun isMongoDateObject(jsonElement: JsonElement?) =
-            jsonElement != null &&
-                    jsonElement.isJsonObject &&
-                    jsonElement.asJsonObject.size() == 1 &&
-                    jsonElement.asJsonObject[dateFieldKey] != null &&
-                    jsonElement.asJsonObject[dateFieldKey].isJsonPrimitive
+    private fun isMongoDateObject(jsonElement: JsonElement?): Boolean {
+        return jsonElement != null &&
+                jsonElement.isJsonObject &&
+                jsonElement.asJsonObject.entrySet().size == 1 &&
+                jsonElement.asJsonObject[dateFieldKey] != null &&
+                jsonElement.asJsonObject[dateFieldKey].isJsonPrimitive
+    }
 
 
     private fun processJsonArray(jsonArray: JsonArray) {
@@ -64,8 +65,10 @@ class DateWrapper {
                     processJsonArray(value.asJsonArray)
                 }
                 value.isJsonPrimitive && value.asJsonPrimitive.isString -> {
-                    parsedDate((value.asJsonPrimitive.asString))?.let { date ->
-                        jsonArray.set(i, dateObject(date))
+                    parsedDate((value.asJsonPrimitive.asString))?.let { _ ->
+                        println("AIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE: SET DATE OBJECT")
+//                        jsonArray.s
+//                        jsonArray[i] = dateObject(date)
                     }
                 }
             }
