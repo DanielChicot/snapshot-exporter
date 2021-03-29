@@ -18,10 +18,10 @@ import java.nio.charset.Charset
 @Component
 class HBaseResultProcessor(private val textUtils: TextUtils) : Processor<Result, SourceRecord> {
 
-    override fun process(input: Result): SourceRecord? {
+    override fun process(item: Result): SourceRecord? {
         try {
-            val idBytes = input.row
-            val value = input.value()
+            val idBytes = item.row
+            val value = item.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
             val outerType = dataBlock.getAsJsonPrimitive("@type")?.asString ?: ""
@@ -40,9 +40,7 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : Processor<Result,
             validateMandatoryField(db, idBytes, "db")
             validateMandatoryField(collection, idBytes, "collection")
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            println("ENCRYPTION BLOCK: $encryptionBlock")
-            println("DB OBJECT: $encryptedDbObject")
-            return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(input), db!!, collection!!,
+            return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(item), db!!, collection!!,
                     if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                     if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
         } catch (e: Exception) {

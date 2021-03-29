@@ -18,8 +18,8 @@ object CompoundProcessor {
         val resultProcessor = context.getBean(HBaseResultProcessor::class.java)
 
         return object: Processor<Result, SourceRecord> {
-            override fun process(input: Result): SourceRecord? {
-                return resultProcessor.process(input)
+            override fun process(item: Result): SourceRecord? {
+                return resultProcessor.process(item)
             }
         }
     }
