@@ -137,7 +137,7 @@ class MetricsConfiguration {
                 register()
             }
 
-    @Value("\${pushgateway.host}")
+    @Value("\${pushgateway.host:localhost}")
     private lateinit var pushgatewayHost: String
 
     @Value("\${pushgateway.port:9091}")

@@ -35,7 +35,7 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
             build()
         }
 
-    private fun prefix(key: Text): String = "map_reduce_output/${key(key)}.jsonl"
+    private fun prefix(key: Text): String = "map_reduce_output/${key(key)}.txt.gz.enc"
     private fun key(key: Text) = String(key.bytes.sliceArray(0 until key.length))
 
     companion object {

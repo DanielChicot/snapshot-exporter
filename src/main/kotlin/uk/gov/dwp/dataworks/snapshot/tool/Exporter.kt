@@ -19,7 +19,7 @@ import java.util.*
 class Exporter: Configured(), Tool {
 
     override fun run(args: Array<out String>): Int =
-            initialisedTableMapperJob(args[0], args[1]).run {
+            initialisedTableMapperJob(args[0], args[1], args[2].toInt()).run {
                 if (waitForCompletion(true)) {
                     0
                 } else {
@@ -28,8 +28,8 @@ class Exporter: Configured(), Tool {
                 }
             }
 
-    private fun initialisedTableMapperJob(sourceTable: String, targetBucket: String): Job =
-            job(sourceTable, targetBucket).also { job ->
+    private fun initialisedTableMapperJob(sourceTable: String, targetBucket: String, reducerCount: Int): Job =
+            job(sourceTable, targetBucket, reducerCount).also { job ->
                 TableMapReduceUtil.initTableMapperJob(sourceTable,
                     scan(),
                     TableScanMapper::class.java,
@@ -44,12 +44,12 @@ class Exporter: Configured(), Tool {
                 cacheBlocks = false
             }
 
-    private fun job(sourceTable: String, targetBucket: String): Job =
+    private fun job(sourceTable: String, targetBucket: String, reducerCount: Int): Job =
             Job.getInstance(configuration(sourceTable, targetBucket), jobName(sourceTable)).apply {
                 setJarByClass(TableScanMapper::class.java)
                 outputFormatClass = NullOutputFormat::class.java
                 reducerClass = S3Reducer::class.java
-                numReduceTasks = 1
+                numReduceTasks = reducerCount
             }
 
     private fun configuration(sourceTable: String, targetBucket: String): Configuration =

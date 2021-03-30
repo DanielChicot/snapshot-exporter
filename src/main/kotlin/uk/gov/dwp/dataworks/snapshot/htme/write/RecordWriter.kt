@@ -3,6 +3,7 @@ package uk.gov.dwp.dataworks.snapshot.htme.write
 import uk.gov.dwp.dataworks.snapshot.domain.EncryptingOutputStream
 import uk.gov.dwp.dataworks.snapshot.htme.configuration.CompressionInstanceProvider
 import uk.gov.dwp.dataworks.snapshot.htme.context.HtmeConfiguration
+import uk.gov.dwp.dataworks.snapshot.htme.context.HtmeConfiguration.Companion.bean
 import uk.gov.dwp.dataworks.snapshot.htme.exceptions.DataKeyServiceUnavailableException
 import uk.gov.dwp.dataworks.snapshot.htme.service.impl.AESCipherService
 import uk.gov.dwp.dataworks.snapshot.htme.service.impl.HttpKeyService
@@ -41,23 +42,23 @@ object RecordWriter {
 
 
     private val manifestOutputDirectory by lazy {
-        HtmeConfiguration.bean("manifestOutputDirectory", String::class.java)
+        bean("manifestOutputDirectory", String::class.java)
     }
 
     private val keyService by lazy {
-        HtmeConfiguration.bean(HttpKeyService::class.java)
+        bean(HttpKeyService::class.java)
     }
 
     private val secureRandom by lazy {
-        HtmeConfiguration.bean(SecureRandom::class.java)
+        bean(SecureRandom::class.java)
     }
 
     private val cipherService by lazy {
-        HtmeConfiguration.bean(AESCipherService::class.java)
+        bean(AESCipherService::class.java)
     }
 
     private val compressionInstanceProvider by lazy {
-        HtmeConfiguration.bean(CompressionInstanceProvider::class.java)
+        bean(CompressionInstanceProvider::class.java)
     }
 
 }
