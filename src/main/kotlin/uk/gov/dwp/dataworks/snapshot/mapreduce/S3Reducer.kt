@@ -6,29 +6,30 @@ import org.slf4j.LoggerFactory
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
-import java.io.BufferedOutputStream
+import uk.gov.dwp.dataworks.snapshot.domain.EncryptingOutputStream
+import uk.gov.dwp.dataworks.snapshot.htme.write.RecordWriter.encryptingOutputStream
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 
 class S3Reducer: Reducer<Text, Text, Text, Text>() {
 
     override fun reduce(key: Text, values: MutableIterable<Text>, context: Context) {
-        s3client.putObject(request(context.configuration["s3.bucket"], key), requestBody(sourceBytes(values)))
+        val encryptingOutputStream = encryptingOutputStream(key(key))
+        s3client.putObject(request(context.configuration["s3.bucket"], key),
+            requestBody(sourceBytes(encryptingOutputStream, values)))
     }
 
     private fun requestBody(input: ByteArray): RequestBody =
         RequestBody.fromInputStream(ByteArrayInputStream(input), input.size.toLong())
 
-    private fun sourceBytes(values: MutableIterable<Text>): ByteArray =
-        ByteArrayOutputStream().run {
-            BufferedOutputStream(this).use { output ->
-                values.map(Text::getBytes).forEach<ByteArray>(output::write)
-            }
-            toByteArray()
+    private fun sourceBytes(encryptingOutputStream: EncryptingOutputStream, values: MutableIterable<Text>): ByteArray =
+        with (encryptingOutputStream) {
+            values.map(Text::getBytes).forEach<ByteArray>(this::write)
+            close()
+            data()
         }
 
     private fun request(bucket: String, key: Text): PutObjectRequest =
-        with(PutObjectRequest.builder()) {
+        with (PutObjectRequest.builder()) {
             bucket(bucket)
             key(prefix(key))
             build()

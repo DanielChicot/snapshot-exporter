@@ -1,6 +1,8 @@
 package uk.gov.dwp.dataworks.snapshot.htme.context
 
 import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.*
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import uk.gov.dwp.dataworks.snapshot.htme.configuration.CipherInstanceProvider
@@ -40,8 +42,20 @@ class HtmeConfiguration {
     @Bean
     fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
 
+    @Bean
+    fun manifestOutputDirectory() = manifestOutputDirectory
+
+
+    @Value("\${manifest.output.directory:/tmp}")
+    private lateinit var manifestOutputDirectory: String
+
     companion object {
         val logger = DataworksLogger.getLogger(HtmeConfiguration::class)
-    }
+        fun <T> bean(classOfT: Class<T>): T = applicationContext.getBean(classOfT)
+        fun <T> bean(name: String, classOfT: Class<T>): T = applicationContext.getBean(name, classOfT)
 
+        private val applicationContext: ApplicationContext by lazy {
+            AnnotationConfigApplicationContext(HtmeConfiguration::class.java)
+        }
+    }
 }

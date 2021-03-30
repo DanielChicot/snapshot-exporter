@@ -11,7 +11,7 @@ import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat
 import org.apache.hadoop.util.Tool
 import org.slf4j.LoggerFactory
 import uk.gov.dwp.dataworks.snapshot.mapreduce.S3Reducer
-import uk.gov.dwp.dataworks.snapshot.mapreduce.TableScannerMapper
+import uk.gov.dwp.dataworks.snapshot.mapreduce.TableScanMapper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,7 +32,7 @@ class Exporter: Configured(), Tool {
             job(sourceTable, targetBucket).also { job ->
                 TableMapReduceUtil.initTableMapperJob(sourceTable,
                     scan(),
-                    TableScannerMapper::class.java,
+                    TableScanMapper::class.java,
                     Text::class.java,
                     Text::class.java,
                     job)
@@ -46,7 +46,7 @@ class Exporter: Configured(), Tool {
 
     private fun job(sourceTable: String, targetBucket: String): Job =
             Job.getInstance(configuration(sourceTable, targetBucket), jobName(sourceTable)).apply {
-                setJarByClass(TableScannerMapper::class.java)
+                setJarByClass(TableScanMapper::class.java)
                 outputFormatClass = NullOutputFormat::class.java
                 reducerClass = S3Reducer::class.java
                 numReduceTasks = 1
