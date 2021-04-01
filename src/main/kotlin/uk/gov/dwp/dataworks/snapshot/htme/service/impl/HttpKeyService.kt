@@ -11,6 +11,7 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
@@ -29,13 +30,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
                      private val dksDecryptKeyRetriesCounter: Counter,
                      private val dksNewDataKeyRetriesCounter: Counter): KeyService {
 
-    companion object {
-        val logger = DataworksLogger.getLogger(HttpKeyService::class)
-    }
-
-    @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+        maxAttemptsExpression = "\${keyservice.retry.maxAttempts:10}",
         backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
             multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class)
@@ -86,18 +82,19 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
         }
     }
 
-    @Override
-    @Retryable(value = [DataKeyServiceUnavailableException::class],
-                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
-                backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
-                                  multiplierExpression = "\${keyservice.retry.multiplier:2}"))
-    @PrometheusTimeMethod(name = "htme_dks_decrypt_key_duration", help = "Duration of dks decrypt key operations")
+//    @Override
+//    @Retryable(value = [DataKeyServiceUnavailableException::class],
+//                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:10}",
+//                backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+//                                  multiplierExpression = "\${keyservice.retry.multiplier:2}"))
+//    @PrometheusTimeMethod(name = "htme_dks_decrypt_key_duration", help = "Duration of dks decrypt key operations")
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
+                logger.info("Got key from cache", "cache_key" to cacheKey)
                 decryptedKeyCache[cacheKey]!!
             } else {
                 httpClientProvider.client().use { client ->
@@ -107,6 +104,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
                     val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
+
                     client.execute(httpPost).use { response ->
                         return when (val statusCode = response.statusLine.statusCode) {
                             200 -> {
@@ -164,4 +162,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${data.key.service.url}")
     private lateinit var dataKeyServiceUrl: String
+
+    companion object {
+        val logger = DataworksLogger.getLogger(HttpKeyService::class)
+    }
 }

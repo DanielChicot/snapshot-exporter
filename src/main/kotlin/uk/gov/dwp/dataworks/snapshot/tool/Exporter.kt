@@ -19,7 +19,7 @@ import java.util.*
 class Exporter: Configured(), Tool {
 
     override fun run(args: Array<out String>): Int =
-        initialisedTableMapperJob(args[0], args[1], args[2].toInt(), args[3].toInt()).run {
+        initialisedTableMapperJob(args[0], args[1], args[2].toInt(), args[3].toInt(), args[4]).run {
             if (waitForCompletion(true)) {
                 0
             } else {
@@ -29,8 +29,8 @@ class Exporter: Configured(), Tool {
         }
 
     private fun initialisedTableMapperJob(sourceTable: String, targetBucket: String, reducerCount: Int,
-                                          batchSize: Int): Job =
-        job(sourceTable, targetBucket, reducerCount).also { job ->
+                                          batchSize: Int, keyBytes: String): Job =
+        job(sourceTable, targetBucket, reducerCount, keyBytes).also { job ->
             TableMapReduceUtil.initTableMapperJob(sourceTable,
                 scan(batchSize),
                 TableScanMapper::class.java,
@@ -47,18 +47,20 @@ class Exporter: Configured(), Tool {
             maxResultSize = -1
         }
 
-    private fun job(sourceTable: String, targetBucket: String, reducerCount: Int): Job =
-        Job.getInstance(configuration(sourceTable, targetBucket), jobName(sourceTable)).apply {
+    private fun job(sourceTable: String, targetBucket: String, reducerCount: Int, keyBytes: String): Job =
+        Job.getInstance(configuration(sourceTable, targetBucket, keyBytes), jobName(sourceTable)).apply {
             setJarByClass(TableScanMapper::class.java)
             outputFormatClass = NullOutputFormat::class.java
             reducerClass = S3Reducer::class.java
             numReduceTasks = reducerCount
+            
         }
 
-    private fun configuration(sourceTable: String, targetBucket: String): Configuration =
+    private fun configuration(sourceTable: String, targetBucket: String, keyBytes: String): Configuration =
         HBaseConfiguration.create().apply {
             this["source.table"] = sourceTable
             this["s3.bucket"] = targetBucket
+            this["key.bytes"] = keyBytes
         }
 
     private fun jobName(sourceTable: String) = "Snapshot exporter '$sourceTable': " +
