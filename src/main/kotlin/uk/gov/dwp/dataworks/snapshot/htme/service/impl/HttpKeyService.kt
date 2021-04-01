@@ -82,11 +82,10 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
         }
     }
 
-//    @Override
-//    @Retryable(value = [DataKeyServiceUnavailableException::class],
-//                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:10}",
-//                backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
-//                                  multiplierExpression = "\${keyservice.retry.multiplier:2}"))
+    @Retryable(value = [DataKeyServiceUnavailableException::class],
+                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:10}",
+                backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+                                  multiplierExpression = "\${keyservice.retry.multiplier:2}"))
 //    @PrometheusTimeMethod(name = "htme_dks_decrypt_key_duration", help = "Duration of dks decrypt key operations")
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
