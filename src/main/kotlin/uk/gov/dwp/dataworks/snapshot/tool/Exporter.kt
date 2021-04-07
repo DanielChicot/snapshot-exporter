@@ -20,6 +20,11 @@ class Exporter: Configured(), Tool {
 
     override fun run(args: Array<out String>): Int =
         initialisedTableMapperJob(args[0], args[1], args[2].toInt(), args[3].toInt(), args[4]).run {
+            println("SOURCE TABLE: '${args[0]}',")
+            println("OUTPUT BUCKET: '${args[1]}'.")
+            println("NUM REDUCERS: '${args[2]}'.")
+            println("BATCH SIZE: '${args[3]}'.")
+            println("KEY BYTES: '${args[4]}'.")
             if (waitForCompletion(true)) {
                 0
             } else {

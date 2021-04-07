@@ -24,7 +24,7 @@ class SecureHttpClientProvider : HttpClientProvider {
 
     private fun requestConfig(): RequestConfig =
         RequestConfig.custom().run {
-            setConnectTimeout(5_000)
+            setConnectTimeout(60_000)
             setConnectionRequestTimeout(60_000)
             setSocketTimeout(60_000)
             build()
