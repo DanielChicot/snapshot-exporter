@@ -11,7 +11,6 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.EnableRetry
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
@@ -31,7 +30,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
                      private val dksNewDataKeyRetriesCounter: Counter): KeyService {
 
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttemptsExpression = "\${keyservice.retry.maxAttempts:10}",
+        maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
             multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class)
@@ -83,7 +82,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
     }
 
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:10}",
+                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
                 backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
                                   multiplierExpression = "\${keyservice.retry.multiplier:2}"))
 //    @PrometheusTimeMethod(name = "htme_dks_decrypt_key_duration", help = "Duration of dks decrypt key operations")

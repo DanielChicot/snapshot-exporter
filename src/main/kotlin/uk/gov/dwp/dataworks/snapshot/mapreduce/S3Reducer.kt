@@ -7,6 +7,7 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import uk.gov.dwp.dataworks.snapshot.domain.EncryptingOutputStream
+import uk.gov.dwp.dataworks.snapshot.domain.EncryptionBlock
 import uk.gov.dwp.dataworks.snapshot.htme.context.HtmeConfiguration.Companion.bean
 import uk.gov.dwp.dataworks.snapshot.htme.service.impl.AESCipherService
 import uk.gov.dwp.dataworks.snapshot.htme.service.impl.HttpKeyService
@@ -21,10 +22,17 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
 //                "${sourceRecord.encryption.initializationVector}|" +
 //                "${sourceRecord.encryption.keyEncryptionKeyId}|" +
 //                "${sourceRecord.dbObject}\n"
+
+        val list = values.map(this@S3Reducer::validBytes).map {
+            val (encryptedEncryptionKey, initialisationVector, keyEncryptionKeyId, dbObject) = it.split("|")
+            Pair(EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey), dbObject)
+        }
+
         val dks = bean(HttpKeyService::class.java)
-        val datakeys: Map<String, String> = values.map {
-            val (encryptedEncryptionKey, _, keyEncryptionKeyId, _) = String(it.bytes).split("|")
-            Pair(encryptedEncryptionKey, keyEncryptionKeyId)
+
+
+        val datakeys: Map<String, String> = list.map { (encryptionBlock, _) ->
+            Pair(encryptionBlock.encryptedEncryptionKey, encryptionBlock.keyEncryptionKeyId)
         }.toSet().mapNotNull { (encryptedEncryptionKey, keyEncryptionKeyId) ->
             try {
                 val decrypted = dks.decryptKey(keyEncryptionKeyId, encryptedEncryptionKey)
@@ -40,22 +48,27 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
 
         val cipherService = bean(AESCipherService::class.java)
 
-        val dbObjects: List<String> = values.asSequence().map {
-            val (encryptedEncryptionKey, initialisationVector, _, dbObject) = String(it.bytes).split("|")
-            Triple(dbObject, datakeys[encryptedEncryptionKey], initialisationVector)
+        val dbObjects: List<String> = list.asSequence().map { (encryptionBlock, dbObject) ->
+            Triple(dbObject, datakeys[encryptionBlock.encryptedEncryptionKey], encryptionBlock.initializationVector)
         }.mapNotNull { (dbObject, decryptedEncryptionKey: String?, initialisationVector) ->
             if (decryptedEncryptionKey == null) {
                 log.error("NO KEY FOUND!!!!!!")
             }
             decryptedEncryptionKey?.let {
-                cipherService.decrypt(decryptedEncryptionKey, initialisationVector, dbObject)
+                try {
+                    cipherService.decrypt(it, initialisationVector, dbObject)
+                } catch (e: Exception) {
+                    println("Failed to decrypt: '$dbObject'")
+                    e.printStackTrace()
+                    null
+                }
             }
         }.toList()
 
         log.info("No of values: ${dbObjects.size}")
         log.info("No of keys: ${datakeys.size}")
 
-        val encryptingOutputStream = encryptingOutputStream(key(key))
+        val encryptingOutputStream = encryptingOutputStream(validBytes(key))
 
         s3client.putObject(request(context.configuration["s3.bucket"], key),
             requestBody(sourceBytes(encryptingOutputStream, dbObjects)))
@@ -79,8 +92,8 @@ class S3Reducer: Reducer<Text, Text, Text, Text>() {
             build()
         }
 
-    private fun prefix(key: Text): String = "map_reduce_output/${key(key)}.txt.gz.enc"
-    private fun key(key: Text) = String(key.bytes.sliceArray(0 until key.length))
+    private fun prefix(key: Text): String = "map_reduce_output/${validBytes(key)}.txt.gz.enc"
+    private fun validBytes(key: Text) = String(key.bytes.sliceArray(0 until key.length))
 
     companion object {
         private val log = LoggerFactory.getLogger(S3Reducer::class.java)

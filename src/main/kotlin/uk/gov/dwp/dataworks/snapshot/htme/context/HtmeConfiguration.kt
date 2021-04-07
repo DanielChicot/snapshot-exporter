@@ -4,7 +4,6 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.*
-import org.springframework.retry.annotation.EnableRetry
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import uk.gov.dwp.dataworks.snapshot.htme.configuration.CipherInstanceProvider
 import uk.gov.dwp.dataworks.snapshot.htme.configuration.CompressionInstanceProvider
@@ -12,7 +11,6 @@ import java.io.OutputStream
 import java.security.SecureRandom
 import javax.crypto.Cipher
 
-@EnableRetry
 @Configuration
 @ComponentScan(
     "uk.gov.dwp.dataworks.snapshot.htme.configuration",
@@ -24,20 +22,22 @@ import javax.crypto.Cipher
 class HtmeConfiguration {
 
     @Bean
-    fun gzCompressor() =
-        object: CompressionInstanceProvider {
-            override fun compressorOutputStream(outputStream: OutputStream) =
-                CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.GZIP, outputStream)
+    fun gzCompressor() = object: CompressionInstanceProvider {
+        override fun compressorOutputStream(outputStream: OutputStream) =
+            CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.GZIP, outputStream)
 
-            override fun compressionExtension() = "gz"
-        }
+        override fun compressionExtension() = "gz"
+    }
 
 
     @Bean
-    fun cipherInstanceProvider() =
-        object: CipherInstanceProvider {
-            override fun cipherInstance(): Cipher = Cipher.getInstance("AES/CTR/NoPadding", "BC")
+    fun cipherInstanceProvider(): CipherInstanceProvider {
+        return object: CipherInstanceProvider {
+            override fun cipherInstance(): Cipher {
+                return Cipher.getInstance("AES/CTR/NoPadding", "BC")
+            }
         }
+    }
 
     @Bean
     fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
